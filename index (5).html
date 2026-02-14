@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricket Player Evaluation System</title>
+<style>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: white;
+}
+.container { max-width: 1000px; margin: auto; padding: 30px; }
+h1,h2 { text-align: center; }
+.card {
+    background: rgba(255,255,255,0.08);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+}
+input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; border-radius: 8px; border: none; }
+button {
+    background: linear-gradient(to right, #92fe9d, #00c9ff);
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    width: 100%;
+    transition: 0.3s;
+}
+button:hover { transform: scale(1.05);}
+.result { margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 10px; }
+img.preview { width: 120px; height: 120px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; border: 2px solid #fff; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1> Cricket Player Evaluation System</h1>
+
+<!-- PLAYER INFORMATION -->
+<div class="card">
+<h2>Player Information</h2>
+<label>Full Name</label>
+<input type="text" id="name" placeholder="Player Name">
+<label>Age</label>
+<input type="number" id="age" placeholder="Age">
+<label>Experience (Years)</label>
+<input type="number" id="experience" placeholder="Years Played">
+<label>Height (cm)</label>
+<input type="number" id="height">
+<label>Weight (kg)</label>
+<input type="number" id="weight">
+<label>Player Bio / Introduction</label>
+<textarea id="bio" rows="3" placeholder="Player intro, strengths, ambitions..."></textarea>
+<label>Player Photo</label>
+<input type="file" id="photo" accept="image/*" onchange="previewPhoto(event)">
+<img id="photoPreview" class="preview" src="" alt="Photo Preview" style="display:none;">
+</div>
+
+<!-- PERFORMANCE METRICS -->
+<div class="card">
+<h2>Performance Metrics</h2>
+<label>Bowling Speed (km/h)</label>
+<input type="number" id="speed">
+<label>Line Accuracy (%)</label>
+<input type="number" id="accuracy" min="0" max="100">
+<canvas id="actionCanvas" width="400" height="200"></canvas>
+<button onclick="analyzeBowling()">Analyze Bowling</button>
+<div id="bowlingResult" class="result"></div>
+<label>Batting Average</label>
+<input type="number" id="average">
+<label>Strike Rate</label>
+<input type="number" id="strike">
+<button onclick="analyzeBatting()">Analyze Batting</button>
+<div id="battingResult" class="result"></div>
+</div>
+
+<!-- TRAINER RATINGS -->
+<div class="card">
+<h2>Trainer Ratings (1-10)</h2>
+<label>Batting Skill</label>
+<input type="number" id="tBatting" min="1" max="10" placeholder="1-10">
+<label>Bowling Skill</label>
+<input type="number" id="tBowling" min="1" max="10" placeholder="1-10">
+<label>Physical Fitness</label>
+<input type="number" id="tFitness" min="1" max="10" placeholder="1-10">
+<label>Mental Toughness</label>
+<input type="number" id="tMental" min="1" max="10" placeholder="1-10">
+<label>Attitude / Teamwork</label>
+<input type="number" id="tAttitude" min="1" max="10" placeholder="1-10">
+<label>Technical Uniqueness / Special Techniques</label>
+<input type="number" id="tTech" min="1" max="10" placeholder="1-10">
+<label>Optional Trainer Comment</label>
+<textarea id="trainerComment" rows="3" placeholder="Optional comment"></textarea>
+</div>
+
+<!-- FINAL REPORT -->
+<div class="card">
+<button onclick="generateFinalReport()">Generate Final Player Report</button>
+<div id="finalResult" class="result"></div>
+</div>
+
+</div>
+
+<script>
+let bowlerScore=0;
+let batterScore=0;
+
+// PHOTO PREVIEW
+function previewPhoto(event){
+    let reader = new FileReader();
+    reader.onload = function(){
+        let output = document.getElementById('photoPreview');
+        output.src = reader.result;
+        output.style.display='block';
+    }
+    reader.readAsDataURL(event.target.files[0]);
+}
+
+// BOWLING ANALYSIS
+function analyzeBowling(){
+    let speed=parseFloat(document.getElementById("speed").value)||0;
+    let accuracy=parseFloat(document.getElementById("accuracy").value)||0;
+    bowlerScore=(speed/5)+(accuracy/2);
+
+    let rating;
+    if(bowlerScore>80) rating="Elite Bowler 🔥";
+    else if(bowlerScore>60) rating="Advanced Bowler";
+    else if(bowlerScore>40) rating="Intermediate Bowler";
+    else rating="Beginner Bowler";
+
+    document.getElementById("bowlingResult").innerHTML="Bowler Score: "+bowlerScore.toFixed(2)+"<br>Rating: "+rating;
+    drawActionLines();
+}
+
+// BATTING ANALYSIS
+function analyzeBatting(){
+    let avg=parseFloat(document.getElementById("average").value)||0;
+    let strike=parseFloat(document.getElementById("strike").value)||0;
+    batterScore=(avg*2)+(strike/5);
+
+    let rating;
+    if(batterScore>150) rating="Elite Batter 🔥";
+    else if(batterScore>110) rating="Advanced Batter";
+    else if(batterScore>70) rating="Intermediate Batter";
+    else rating="Beginner Batter";
+
+    document.getElementById("battingResult").innerHTML="Batter Score: "+batterScore.toFixed(2)+"<br>Rating: "+rating;
+}
+
+// FINAL REPORT & AUTOMATIC SELECTION
+function generateFinalReport(){
+    // BASIC INFO
+    let name=document.getElementById("name").value||"Unnamed Player";
+    let age=document.getElementById("age").value||"-";
+    let exp=parseFloat(document.getElementById("experience").value)||0;
+    let height=document.getElementById("height").value||"-";
+    let weight=document.getElementById("weight").value||"-";
+    let bio=document.getElementById("bio").value||"-";
+    let photoSrc=document.getElementById('photoPreview').src || "";
+    let coachNotes=document.getElementById("trainerComment").value||"-";
+
+    // TRAINER RATINGS
+    let tBat=parseFloat(document.getElementById("tBatting").value)||0;
+    let tBowl=parseFloat(document.getElementById("tBowling").value)||0;
+    let tFit=parseFloat(document.getElementById("tFitness").value)||0;
+    let tMental=parseFloat(document.getElementById("tMental").value)||0;
+    let tAtt=parseFloat(document.getElementById("tAttitude").value)||0;
+    let tTech=parseFloat(document.getElementById("tTech").value)||0;
+
+    // OVERALL SCORE CALCULATION
+    // Combine metrics + trainer points
+    let overall=(bowlerScore*0.3 + batterScore*0.3 + exp*5*0.2 + tBat*2 + tBowl*2 + tFit*1.5 + tMental*1.5 + tAtt*1 + tTech*1.5)/10.5;
+
+    // ROLE SUGGESTION
+    let role="All-Rounder";
+    if(tBat > tBowl+2) role="Batsman";
+    else if(tBowl > tBat+2) role="Bowler";
+    if(overall>8 && tBat>8 && tBowl>7) role="Captain Candidate";
+
+    // SELECTION
+    let selection="";
+    if(overall>=7) selection="Selected for Squad ✅";
+    else if(overall>=5) selection="Needs Training ⚡";
+    else selection="Not Selected ❌";
+
+    // FINAL REPORT
+    document.getElementById("finalResult").innerHTML=
+        `<h3>${name}</h3>`+
+        (photoSrc?`<img src="${photoSrc}" class="preview">`:"")+
+        `Age: ${age}<br>Height: ${height} cm, Weight: ${weight} kg<br>`+
+        `Experience: ${exp} years<br>Bio: ${bio}<br>`+
+        `<hr><strong>Bowling Score:</strong> ${bowlerScore.toFixed(2)}<br>`+
+        `<strong>Batting Score:</strong> ${batterScore.toFixed(2)}<br>`+
+        `<strong>Trainer Ratings:</strong><br>`+
+        `Batting: ${tBat}/10, Bowling: ${tBowl}/10, Fitness: ${tFit}/10, Mental: ${tMental}/10, Attitude: ${tAtt}/10, Technical: ${tTech}/10<br>`+
+        `<strong>Overall Score:</strong> ${overall.toFixed(2)}/10<br>`+
+        `<strong>Suggested Role:</strong> ${role}<br>`+
+        `<strong>Selection Status:</strong> ${selection}<br>`+
+        `<hr><strong>Trainer Comment:</strong> ${coachNotes}`;
+}
+
+// DRAW BOWLING PATH
+function drawActionLines(){
+    let canvas=document.getElementById("actionCanvas");
+    let ctx=canvas.getContext("2d");
+    ctx.clearRect(0,0,400,200);
+    ctx.strokeStyle="lime"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(50,150); ctx.lineTo(200,50); ctx.stroke();
+    ctx.strokeStyle="red"; ctx.beginPath(); ctx.moveTo(200,50); ctx.lineTo(350,150); ctx.stroke();
+    ctx.fillStyle="white"; ctx.fillText("Ideal Bowling Arm Path",120,30);
+}
+</script>
+</body>
+</html>
